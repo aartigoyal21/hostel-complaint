@@ -1,0 +1,61 @@
+[
+  {
+    "name": "abc",
+    "email": "abc21@gmail.com",
+    "password": "abcd"
+  },
+  {
+    "name": "abcd",
+    "roll": "12345678",
+    "email": "abcd21@gmail.com",
+    "password": "1234567890"
+  },
+  {
+    "name": "abcd",
+    "roll": "12345678",
+    "email": "abcd21@gmail.com",
+    "password": "`123456890"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "98765432"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "23489"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "234567io"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "qwtyukl"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "34yuil"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "aertykl"
+  },
+  {
+    "name": "qwer",
+    "roll": "65431234567",
+    "email": "qwer23@gmail.com",
+    "password": "12345"
+  }
+]

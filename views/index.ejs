@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostel Complaint Management System</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+scroll-behavior:smooth;
+}
+
+.welcome-bar{
+background:black;
+color:white;
+padding:12px 20px;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:15px;
+font-size:17px;
+position:fixed;
+top:0;
+width:100%;
+z-index:2000;
+animation:slideDown 0.5s ease;
+}
+
+.welcome-bar button{
+background:transparent;
+border:none;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+@keyframes slideDown{
+from{transform:translateY(-100%);}
+to{transform:translateY(0);}
+}
+
+nav{
+position:fixed;
+width:100%;
+background:#2c3e50;
+padding:15px 50px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+z-index:1000;
+margin-top:60px;
+}
+
+nav h2{
+color:white;
+}
+
+nav ul{
+list-style:none;
+display:flex;
+}
+
+nav ul li{
+margin-left:20px;
+}
+
+nav ul li a{
+text-decoration:none;
+color:white;
+font-weight:bold;
+}
+
+nav ul li a:hover{
+color:#f39c12;
+}
+
+.hero{
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:120px 50px 50px;
+background:#f4f6f7;
+}
+
+.hero-container{
+display:flex;
+align-items:center;
+justify-content:space-between;
+max-width:1300px;
+width:100%;
+gap:60px;
+}
+
+.hero-image img{
+width:100%;
+max-width:650px;
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+border-radius:10px;
+}
+
+.hero-text h1{
+font-size:52px;
+color:#2c3e50;
+}
+
+.hero-text span{
+color:#f39c12;
+}
+
+.hero-text p{
+margin-top:20px;
+font-size:19px;
+color:#555;
+line-height:1.6;
+}
+
+.hero-text button{
+margin-top:25px;
+padding:14px 28px;
+font-size:18px;
+border:none;
+background:#f39c12;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+.hero-text button:hover{
+background:#d68910;
+}
+
+section{
+padding:100px 50px;
+}
+
+section h2{
+text-align:center;
+margin-bottom:40px;
+font-size:36px;
+}
+
+.about{
+background:#ecf0f1;
+text-align:center;
+font-size:18px;
+line-height:1.6;
+}
+
+.categories{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+text-align:center;
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+border-radius:10px;
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.05);
+}
+
+.card img{
+width:100%;
+height:200px;
+object-fit:cover;
+border-radius:10px;
+}
+
+.contact{
+background:#2c3e50;
+color:white;
+text-align:center;
+}
+
+.contact-info{
+font-size:20px;
+line-height:2;
+}
+
+.contact-info span{
+color:#f39c12;
+font-weight:bold;
+}
+
+footer{
+text-align:center;
+padding:20px;
+background:black;
+color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<% if(user){ %>
+
+<div id="welcomeBar" class="welcome-bar">
+
+<span>👋 Welcome <b><%= user %></b></span>
+
+<button onclick="closeWelcome()">✕</button>
+
+</div>
+
+<% } %>
+
+
+<nav>
+
+<h2>HostelCare</h2>
+
+<ul>
+<li><a href="#home">Home</a></li>
+<li><a href="#about">About</a></li>
+<li><a href="#services">Complaints</a></li>
+<li><a href="#contact">Contact</a></li>
+<li><a href="/logout">Logout</a></li>
+</ul>
+
+</nav>
+
+
+<section class="hero" id="home">
+
+<div class="hero-container">
+
+<div class="hero-image">
+<img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5">
+</div>
+
+<div class="hero-text">
+
+<h1>
+Hostel <span>Complaint</span><br>
+Management System
+</h1>
+
+<p>
+A smart platform where hostel students can register complaints,
+track issues, and get faster resolutions from hostel management.
+</p>
+
+<button onclick="window.location.href='/register'">
+Register Complaint
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="about" id="about">
+
+<h2>About System</h2>
+
+<p>
+This system helps hostel students to register complaints related to
+electricity, water, mess, cleanliness and maintenance.
+Admin can track and resolve complaints efficiently.
+</p>
+
+</section>
+
+
+
+<section id="services">
+
+<h2>Complaint Categories</h2>
+
+<div class="categories">
+
+<div class="card">
+<img src="https://images.pexels.com/photos/672082/pexels-photo-672082.jpeg">
+<h3>Electricity</h3>
+<p>Report power cuts & electrical issues.</p>
+</div>
+
+<div class="card">
+<img src="https://media.telanganatoday.com/wp-content/uploads/2024/04/Water-Crisis.jpg">
+<h3>Water</h3>
+<p>Water supply & leakage complaints.</p>
+</div>
+
+<div class="card">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLKx2_41bDamTTQGfC6ObSVw9orajoozGeuA&s">
+<h3>Mess</h3>
+<p>Food quality & mess related issues.</p>
+</div>
+
+<div class="card">
+<img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952">
+<h3>Cleanliness</h3>
+<p>Cleaning & sanitation issues.</p>
+</div>
+
+</div>
+
+</section>
+
+
+<section class="contact" id="contact">
+
+<h2>Contact Us</h2>
+
+<div class="contact-info">
+
+<p><span>Developer:</span> Ram Arora</p>
+<p><span>Email:</span> ram.arora@gmail.com</p>
+<p><span>Phone:</span> +91 9876 *****</p>
+<p><span>Address:</span> Rajpura, Punjab</p>
+
+</div>
+
+</section>
+
+
+<footer>
+© 2026 Hostel Complaint Management System | All Rights Reserved
+</footer>
+
+<script>
+
+function closeWelcome(){
+
+document.getElementById("welcomeBar").style.display="none";
+
+document.querySelector("nav").style.marginTop="0";
+
+}
+
+</script>
+
+</body>
+</html>
