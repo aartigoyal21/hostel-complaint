@@ -98,10 +98,18 @@ app.post("/submit-complaint",(req,res)=>{
     console.log("Complaint Received:");
     console.log(name, room, email, category, description);
 
-    res.send("Complaint Submitted Successfully!");
+    res.send("<h1>Complaint Submitted Successfully!<h1>");
 
 });
 
+
+// app.use((req, res) => {
+//     res.status(404).send("<h1>404 - Page Not Found</h1><p>Sorry, we couldn't find that path!</p>");
+
+// });
+app.use((req,res)=>{
+res.status(404).render("404");
+});
 
 app.listen(3000,()=>{
     console.log("Server running on http://localhost:3000");
