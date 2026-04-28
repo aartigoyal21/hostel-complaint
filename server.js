@@ -1,116 +1,293 @@
+require("dotenv").config();
+const mongoose = require("mongoose");
 const express = require("express");
-const app = express();
 const path = require("path");
-const fs = require("fs");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
+
+const upload = require("./middleware/uploadMiddleware");
+const authMiddleware = require("./middleware/auth");
+const User = require("./models/User");
+const Complaint = require("./models/Complaint");
+//=========================================================================
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const session = require("express-session");
+//=========================================================================
+const app = express();
 
+// MongoDB connect
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log("DB Error:", err));
+
+//=========================================================================
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:5002/auth/google/callback"
+},
+async (accessToken, refreshToken, profile, done) => {
+  try {
+    let user = await User.findOne({ email: profile.emails[0].value });
+
+    if (!user) {
+      user = new User({
+        name: profile.displayName,
+        email: profile.emails[0].value,
+        password: "", // google login mein password nahi hota
+        role: "student",
+        profilePic: profile.photos[0].value
+      });
+
+      await user.save();
+    }
+
+    return done(null, user);
+  } catch (err) {
+    return done(err, null);
+  }
+}));
+//========================================================================  
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
+//=========================================================================
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
 
-app.set("view engine","ejs");
-app.set("views", path.join(__dirname,"views"));
-
-app.use(express.static("public"));
-
+//=========================================================================
 app.use(session({
-    secret:"secretkey",
-    resave:false,
-    saveUninitialized:true
+  secret: "googleloginsecret",
+  resave: false,
+  saveUninitialized: true
 }));
 
-app.get("/", (req,res)=>{
-    res.redirect("/signup");
+app.use(passport.initialize());
+app.use(passport.session());
+//=========================================================================
+
+// Home
+app.get("/", (req, res) => {
+  res.render("index");
 });
 
-app.get("/signup",(req,res)=>{
-    res.render("signup");
+// Login page
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
-app.get("/login",(req,res)=>{
-    res.render("login");
+// Signup page
+app.get("/signup", (req, res) => {
+  res.render("signup");
 });
 
-app.get("/home",(req,res)=>{
+//=========================================================================
+// Google login
+app.get("/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
-    if(!req.session.user){
-        return res.redirect("/login");
+// Google callback
+app.get("/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => {
+
+    const userData = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role,
+      profilePic: req.user.profilePic || "",
+    };
+
+    const token = jwt.sign(userData, process.env.JWT_SECRET || "mysecretkey", {
+      expiresIn: "1h",
+    });
+
+    res.cookie("token", token, { httpOnly: true });
+
+    res.redirect("/dashboard");
+  }
+);
+//================================= ============================
+
+// Signup save to MongoDB
+app.post("/signup", upload.single("profilePic"), async (req, res) => {
+  try {
+    const existingUser = await User.findOne({ email: req.body.email });
+
+    if (existingUser) {
+      return res.send("User already exists with this email");
     }
 
-    res.render("index",{user:req.session.user});
-});
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-app.post("/signup",(req,res)=>{
+    const newUser = new User({
+      name: req.body.name,
+      email: req.body.email,
+      password: hashedPassword,
+      hostelBlock: req.body.hostelBlock,
+      roomNo: req.body.roomNo,
+      profilePic: req.file ? "/uploads/" + req.file.filename : "",
+      role: "student",
+    });
 
-    const {name,roll,email,password} = req.body;
-
-    const users = JSON.parse(fs.readFileSync("users.json"));
-
-    users.push({name,roll,email,password});
-
-    fs.writeFileSync("users.json",JSON.stringify(users,null,2));
+    await newUser.save();
 
     res.redirect("/login");
-
+  } catch (error) {
+    console.log(error);
+    res.send("Error saving user to MongoDB");
+  }
 });
 
-app.post("/login",(req,res)=>{
+// Real login with MongoDB + bcrypt + JWT
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-    const {email,password} = req.body;
+    const foundUser = await User.findOne({ email });
 
-    const users = JSON.parse(fs.readFileSync("users.json"));
-
-    const user = users.find(u => u.email === email && u.password === password);
-
-  if(user){
-
-    req.session.user = user.name;
-
-    res.redirect("/home");
-
-}else{
-
-        res.send("Invalid Login");
-
+    if (!foundUser) {
+      return res.send("User not found");
     }
 
-});
+    const isMatch = await bcrypt.compare(password, foundUser.password);
 
-app.get("/logout",(req,res)=>{
-    req.session.destroy();
-    res.redirect("/login");
-});
-
-
-app.get("/register",(req,res)=>{
-
-    if(!req.session.user){
-        return res.redirect("/login");
+    if (!isMatch) {
+      return res.send("Invalid password");
     }
 
-    res.render("register");
+    const userData = {
+      id: foundUser._id,
+      name: foundUser.name,
+      email: foundUser.email,
+      role: foundUser.role,
+      profilePic: foundUser.profilePic || "",
+    };
 
+    const token = jwt.sign(userData, process.env.JWT_SECRET || "mysecretkey", {
+      expiresIn: "1h",
+    });
+
+    res.cookie("token", token, { httpOnly: true });
+    res.redirect("/dashboard");
+  } catch (error) {
+    console.log(error);
+    res.send("Login error");
+  }
 });
 
+// Protected dashboard
+app.get("/dashboard", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
 
-app.post("/submit-complaint",(req,res)=>{
+    const userData = {
+      name: user?.name || req.user.name || "Student",
+      profilePic: user?.profilePic || req.user.profilePic || "",
+    };
 
-    const { name, room, email, category, description } = req.body;
-
-    console.log("Complaint Received:");
-    console.log(name, room, email, category, description);
-
-    res.send("<h1>Complaint Submitted Successfully!<h1>");
-
+    res.render("dashboard", { user: userData });
+  } catch (error) {
+    console.log(error);
+    res.send("Dashboard error");
+  }
+});
+// Complaint form page
+app.get("/complaint/new", authMiddleware, (req, res) => {
+  res.render("complaintForm");
 });
 
+// Admin dashboard
+app.get("/admin/dashboard", authMiddleware, async (req, res) => {
+  try {
+    const complaints = await Complaint.find()
+      .populate("user")
+      .sort({ createdAt: -1 });
 
-// app.use((req, res) => {
-//     res.status(404).send("<h1>404 - Page Not Found</h1><p>Sorry, we couldn't find that path!</p>");
-
-// });
-app.use((req,res)=>{
-res.status(404).render("404");
+    res.render("adminDashboard", { complaints });
+  } catch (error) {
+    console.log(error);
+    res.send("Error loading admin dashboard");
+  }
 });
 
-app.listen(3000,()=>{
-    console.log("Server running on http://localhost:3000");
+// Complaint form
+app.post("/complaint/new", authMiddleware, async (req, res) => {
+  try {
+    console.log("BODY:", req.body);
+    console.log("USER:", req.user);
+
+    const newComplaint = new Complaint({
+      title: req.body.title,
+      category: req.body.category,
+      description: req.body.description,
+      roomNo: req.body.roomNo,
+      status: "Pending",
+      user: req.user.id
+    });
+
+    await newComplaint.save();
+
+    console.log("Complaint saved successfully");
+    res.redirect("/complaints/my");
+  } catch (err) {
+    console.log("Complaint save error:", err);
+    res.send("Error saving complaint");
+  }
+});
+// My complaints from MongoDB
+app.get("/complaints/my", authMiddleware, async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ user: req.user.id }).sort({ createdAt: -1 });
+    res.render("myComplaints", { complaints });
+  } catch (error) {
+    console.log(error);
+    res.send("Error loading complaints");
+  }
+});
+
+// Update complaint status
+app.post("/admin/complaint/:id/status", authMiddleware, async (req, res) => {
+  try {
+    await Complaint.findByIdAndUpdate(req.params.id, {
+      status: req.body.status,
+    });
+
+    res.redirect("/admin/dashboard");
+  } catch (error) {
+    console.log(error);
+    res.send("Error updating status");
+  }
+});
+
+// Logout
+app.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/");
+});
+
+// 404
+app.use((req, res) => {
+  res.status(404).send("Page Not Found");
+});
+
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
