@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Raise Complaint | HostelCare</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="form-page">
+
+  <div class="form-wrapper">
+    
+    <div class="form-left">
+      <a href="/dashboard" class="back-link">← Back</a>
+      <span class="badge">Complaint Module</span>
+      <h1>Raise a <span>Complaint</span></h1>
+      <p>Fill details and submit your issue.</p>
+    </div>
+
+    <div class="form-card-box">
+      <h2>Complaint Form</h2>
+
+      <form action="/complaint/new" method="POST">
+
+        <div class="input-box">
+          <label>Complaint Title</label>
+          <input type="text" name="title" placeholder="Enter complaint title" required />
+        </div>
+
+        <div class="input-box">
+          <label>Category</label>
+          <select name="category" required>
+            <option value="">Select category</option>
+            <option>Water</option>
+            <option>Electricity</option>
+            <option>WiFi</option>
+            <option>Cleaning</option>
+            <option>Furniture</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="input-box">
+          <label>Room Number</label>
+          <input type="text" name="roomNo" placeholder="Enter your room number" required />
+        </div>
+
+        <div class="input-box">
+          <label>Description</label>
+          <textarea name="description" rows="4" placeholder="Describe your complaint" required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Complaint</button>
+
+      </form>
+    </div>
+
+  </div>
+
+</body>
+</html>
