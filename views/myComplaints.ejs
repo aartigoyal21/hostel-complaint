@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Complaints | HostelCare</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .status {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .pending { background: #fef3c7; color: #b45309; }
+    .progress { background: #dbeafe; color: #1d4ed8; }
+    .resolved { background: #dcfce7; color: #15803d; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">HostelCare</div>
+    <nav class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/complaint/new">Raise Complaint</a>
+      <a href="/complaints/my">My Complaints</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <section class="features-section">
+    <h2>My Complaints</h2>
+
+    <div class="feature-grid">
+      <% if (complaints.length === 0) { %>
+        <div class="feature-card">
+          <h3>No Complaints Yet</h3>
+          <p>You have not submitted any complaints yet.</p>
+        </div>
+      <% } %>
+
+      <% complaints.forEach((complaint) => { %>
+        <div class="feature-card">
+          <h3><%= complaint.title %></h3>
+          <p>Category: <%= complaint.category %></p>
+          <p>Room No: <%= complaint.roomNo %></p>
+          <p>Description: <%= complaint.description %></p>
+          <p>Submitted: <%= complaint.createdAt.toDateString() %></p>
+
+          <% if (complaint.status === "Pending") { %>
+            <span class="status pending"><%= complaint.status %></span>
+          <% } else if (complaint.status === "In Progress") { %>
+            <span class="status progress"><%= complaint.status %></span>
+          <% } else { %>
+            <span class="status resolved"><%= complaint.status %></span>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+</body>
+</html>
